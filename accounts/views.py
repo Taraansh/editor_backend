@@ -1,23 +1,31 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from accounts.models import Profile
-from accounts.serializers import ProfileSerializer
+from accounts.serializers import ProfileSerializer, MyTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 # Create your views here.
 from django.contrib.auth.hashers import make_password, check_password
 
 @api_view(["POST"])
 def signup(request):
+
+    user_email = request.data['user_email']
+    
+    if Profile.objects.filter(user_email=user_email).exists():
+        return JsonResponse({'message': 'Email already exists'})
+
     if request.method == 'POST':
         user_name = request.data.get('user_name')
         user_contact = request.data.get('user_contact')
         user_email = request.data.get('user_email')
-        user_password = request.data.get('user_password')
+        password = request.data.get('password')
 
         # Create a new Profile instance
-        user_password_hashed = make_password(user_password)
+        user_password_hashed = make_password(password)
         user = Profile(user_name=user_name, user_contact=user_contact, user_email=user_email, password=user_password_hashed)
         user.save()
         serializer = ProfileSerializer(user)
@@ -37,16 +45,17 @@ def loginreq(request):
             return Response({"detail": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
         
 @api_view(["PUT", "DELETE"])
-def modify(request, email, password):
-    user = get_object_or_404(Profile, user_email=email, user_password=password)
+def modify(request, email):
+    user = get_object_or_404(Profile, user_email=email)
 
     if request.method == "PUT":
         user.user_name = request.data.get('user_name', user.user_name)
         user.user_contact = request.data.get('user_contact', user.user_contact)
         user.user_email = request.data.get('user_email', user.user_email)
         new_password = request.data.get('new_password')
+        hashed_new_password = make_password(new_password)
         if new_password:
-            user.set_password(new_password)  # Hash the new password using set_password method
+            user.password = hashed_new_password  # Hash the new password using set_password method
         user.save()
         serializer = ProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -57,12 +66,25 @@ def modify(request, email, password):
     
 
 @api_view(["GET"])
-def profile(request, email, password):
+def profile(request, email):
     user = get_object_or_404(Profile, user_email=email)
-    
-    # Check if the provided password matches the user's hashed password
-    if user.check_password(password):
+    if user is not None:
         serializer = ProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response({"detail": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+# view for token routes
+@api_view(['GET'])
+def get_routes(request):
+    """returns a view containing all the possible routes"""
+    routes = [
+       '/token',
+       '/token/refresh'
+   ]
+    return Response(routes)
+
+# view to customize token
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
