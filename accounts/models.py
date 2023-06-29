@@ -39,7 +39,7 @@ class ProfileManager(BaseUserManager):
 
 
 class Profile(AbstractBaseUser, PermissionsMixin):
-    user_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     user_name = models.CharField(max_length=50)
     user_contact = models.CharField(max_length=20)
     user_email = models.CharField(max_length=50, unique=True)
