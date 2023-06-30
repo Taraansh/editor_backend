@@ -52,10 +52,6 @@ def modify(request, email):
         user.user_name = request.data.get('user_name', user.user_name)
         user.user_contact = request.data.get('user_contact', user.user_contact)
         user.user_email = request.data.get('user_email', user.user_email)
-        new_password = request.data.get('new_password')
-        hashed_new_password = make_password(new_password)
-        if new_password:
-            user.password = hashed_new_password  # Hash the new password using set_password method
         user.save()
         serializer = ProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -73,6 +69,23 @@ def profile(request, email):
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response({"detail": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(["PUT"])
+def password_change(request, email):
+    user = get_object_or_404(Profile, user_email=email)
+    if request.method == "PUT":
+        password = request.data.get('password')
+        new_password = request.data.get('new_password')
+        # hashed_old_password = make_password(password)
+        hashed_new_password = make_password(new_password)
+        # if (hashed_old_password == user.password):
+        if user.check_password(password):
+            user.password = hashed_new_password
+            user.save()
+            return Response({"detail": "Password Changed Successfully"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Invalid old password"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 # view for token routes
