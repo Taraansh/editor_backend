@@ -13,20 +13,20 @@ from django.contrib.auth.hashers import make_password, check_password
 @api_view(["POST"])
 def signup(request):
 
-    user_email = request.data['user_email']
+    email = request.data['email']
     
-    if Profile.objects.filter(user_email=user_email).exists():
+    if Profile.objects.filter(email=email).exists():
         return JsonResponse({'message': 'Email already exists'})
 
     if request.method == 'POST':
         user_name = request.data.get('user_name')
         user_contact = request.data.get('user_contact')
-        user_email = request.data.get('user_email')
+        email = request.data.get('email')
         password = request.data.get('password')
 
         # Create a new Profile instance
         user_password_hashed = make_password(password)
-        user = Profile(user_name=user_name, user_contact=user_contact, user_email=user_email, password=user_password_hashed)
+        user = Profile(user_name=user_name, user_contact=user_contact, email=email, password=user_password_hashed)
         user.save()
         serializer = ProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -34,9 +34,9 @@ def signup(request):
 @api_view(["POST"])
 def loginreq(request):
     if request.method == "POST":
-        user_email = request.data.get('user_email')
+        email = request.data.get('email')
         password = request.data.get('password')
-        user = Profile.objects.filter(user_email=user_email).first()
+        user = Profile.objects.filter(email=email).first()
 
         if user is not None and check_password(password, user.password):
             serializer = ProfileSerializer(user)
@@ -46,12 +46,12 @@ def loginreq(request):
         
 @api_view(["PUT", "DELETE"])
 def modify(request, email):
-    user = get_object_or_404(Profile, user_email=email)
+    user = get_object_or_404(Profile, email=email)
 
     if request.method == "PUT":
         user.user_name = request.data.get('user_name', user.user_name)
         user.user_contact = request.data.get('user_contact', user.user_contact)
-        user.user_email = request.data.get('user_email', user.user_email)
+        user.email = request.data.get('email', user.email)
         user.save()
         serializer = ProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -63,7 +63,7 @@ def modify(request, email):
 
 @api_view(["GET"])
 def profile(request, email):
-    user = get_object_or_404(Profile, user_email=email)
+    user = get_object_or_404(Profile, email=email)
     if user is not None:
         serializer = ProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -73,7 +73,7 @@ def profile(request, email):
 
 @api_view(["PUT"])
 def password_change(request, email):
-    user = get_object_or_404(Profile, user_email=email)
+    user = get_object_or_404(Profile, email=email)
     if request.method == "PUT":
         password = request.data.get('password')
         new_password = request.data.get('new_password')

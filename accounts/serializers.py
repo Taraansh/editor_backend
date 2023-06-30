@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ["id", "user_name", "user_contact", "user_email", "password"]
+        fields = ["id", "user_name", "user_contact", "email", "password"]
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -26,5 +26,5 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token['username'] = user.user_name
-        token['user_email'] = user.user_email
+        token['email'] = user.email
         return token
