@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'accounts',
+    'webpages',
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
