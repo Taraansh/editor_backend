@@ -52,4 +52,4 @@ class Profile(AbstractBaseUser, PermissionsMixin):
     objects = ProfileManager()
 
     def __str__(self):
-        return self.user_name
+        return self.email
